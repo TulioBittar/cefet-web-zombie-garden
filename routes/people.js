@@ -9,14 +9,14 @@ router.get('/', async (req, res, next) => {
   try {
     const [people] = await db.execute({
       sql: 'SELECT * FROM person LEFT OUTER JOIN zombie ON eatenBy = zombie.id',
-  
+
       // nestTables resolve conflitos de haver campos com mesmo nome nas tabelas
       // nas quais fizemos JOIN (neste caso, `person` e `zombie`).
       // descrição: https://github.com/felixge/node-mysql#joins-with-overlapping-column-names
       nestTables: true
     })
 
-    
+
     // Exercício 3: negociação de conteúdo para esta resposta
     //
     // renderiza a view de listagem de pessoas, passando como contexto
@@ -52,7 +52,7 @@ router.put('/eaten/', async (req, res, next) => {
   }
 
   try {
-    const [result] = await db.execute(`UPDATE person 
+    const [result] = await db.execute(`UPDATE person
                                        SET alive=false, eatenBy=?
                                        WHERE id=?`,
                                       [zombieId, personId])
@@ -61,7 +61,7 @@ router.put('/eaten/', async (req, res, next) => {
     } else {
       req.flash('success', 'A pessoa foi inteiramente (não apenas cérebro) engolida.')
     }
-    
+
   } catch (error) {
     req.flash('error', `Erro desconhecido. Descrição: ${error}`)
 
@@ -88,7 +88,40 @@ router.get('/new/', (req, res) => {
 //   2. Redirecionar para a rota de listagem de pessoas
 //      - Em caso de sucesso do INSERT, colocar uma mensagem feliz
 //      - Em caso de erro do INSERT, colocar mensagem vermelhinha
+router.post('/', async (req, res) => {
+  const newName = req.body.name;
+  if (!newName || newName.length < 1) {
+    req.flash('error', 'Por favor, entre com o nome da pessoa!')
+    res.redirect('/people/');
+    return;
+  }
+  const transaction = await db.getConnection();
+  try {
+    await transaction.beginTransaction();
+    //codigo aqui
 
+    const [insertResult] = await transaction.execute(
+      `INSERT INTO person (id, name, alive, eatenBy)
+       VALUES (NULL, ?, ?, NULL)`,
+      [newName, 1]
+    )
+    await transaction.commit();
+    req.flash('success', 'Pessoa Inserida')
+  } catch (error) {
+    try {
+      if (transaction) {
+        await transaction.rollback()
+      }
+    } catch (transactionError) {
+      // just ignore
+    }
+    console.error(error)
+    error.friendlyMessage = 'Erro. Não foi possível inserir a pessoa';
+  } finally {
+    transaction.release();
+    res.redirect('/people/');
+  }
+})
 
 /* DELETE uma pessoa */
 // Exercício 2: IMPLEMENTAR AQUI
@@ -97,6 +130,20 @@ router.get('/new/', (req, res) => {
 //   2. Redirecionar para a rota de listagem de pessoas
 //      - Em caso de sucesso do INSERT, colocar uma mensagem feliz
 //      - Em caso de erro do INSERT, colocar mensagem vermelhinha
+router.delete('/:id', async (req, res) => {
+  try {
+    const id = req.params.id;
+    console.log(`id ${id}`);
+    const [result] = await db.execute('DELETE FROM person WHERE id=?', [id]);
+    req.flash('success', 'Pessoa excluída')
+    res.redirect('/people/');
 
+
+  } catch (error) {
+    console.error(error)
+    error.friendlyMessage = 'Não foi possível excluir a pessoa';
+    req.flash('error', 'Não foi possível excluir a pessoa!')
+  }
+})
 
 export default router
