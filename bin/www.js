@@ -2,9 +2,10 @@
 
 // módulos da plataforma
 import http from 'http'
-
+// const http = require('http')
 // módulos da aplicação
 import app from '../app.js'
+// const app = require('../app.js')
 
 
 const PORT = 3000

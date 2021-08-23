@@ -1,5 +1,6 @@
 // módulos da plataforma
 import path from 'path'
+// const path = require('path')
 
 // módulos npm
 import express from 'express'
@@ -8,10 +9,18 @@ import logger from 'morgan'
 import session from 'express-session'
 import methodOverride from 'method-override'
 import flash from 'connect-flash'
+// const express = require('express')
+// const hbs = require('hbs')
+// const logger = require('logger')
+// const session = require('session')
+// const methodOverride = require('methodOverride')
+// const flash = require('flash')
+
 
 
 // outros módulos da aplicação
 import { resetDb } from './db-utils.js'
+// const resetDb = require('./db-utils.js')
 
 
 // a definição das rotas de cada "entidade" está isolada em seu próprio arquivo
@@ -19,7 +28,9 @@ import { resetDb } from './db-utils.js'
 import index from './routes/index.js'
 import people from './routes/people.js'
 import zombies from './routes/zombies.js'
-
+// const index = require('./routes/index.js')
+// const people = require('./routes/people.js')
+// const zombies = require('/routes/zombies.js')
 
 
 const app = express()
